@@ -1,5 +1,26 @@
-# Notice on the use of the OCIT trademark and the OCIT Data Standard
+# Copyright (C) 2018-2020 German Aerospace Center (DLR) and others.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+# Notice on the use of the OCIT trademark and the OCIT Data Standard
 OCIT® is a registered trademark of the companies AVT STOYE, Siemens, Stührenberg and SWARCO.
 
 The OCIT-C Center to Center Data Standard is created and owned by the companies Siemens, AVT STOYE, SWARCO, Stührenberg, Schlothauer & Wauer GmbH & Co KG, PTV Planung Transport Verkehr AG, GEVAS software GmbH and Verkehrs-Systeme AG. To use this standard in your own software, a license from any of the above companies must be obtained.

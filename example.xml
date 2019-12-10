@@ -1,0 +1,19 @@
+...
+    <SignalgruppeListe>
+        <Signalgruppe>
+            <BezeichnungKurz>K1</BezeichnungKurz>
+            <OCITOutstationNr>1</OCITOutstationNr>
+            <Bemerkungen>
+                <Bemerkung>0;1</Bemerkung>
+            </Bemerkungen>
+            ...
+        </Signalgruppe>
+        <Signalgruppe>
+            <BezeichnungKurz>K2</BezeichnungKurz>
+            <OCITOutstationNr>3</OCITOutstationNr>
+            <Bemerkungen>
+                <Bemerkung>2</Bemerkung>
+            </Bemerkungen>
+            ...
+        </Signalgruppe>
+ ...
