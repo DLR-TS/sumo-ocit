@@ -132,6 +132,8 @@ SUMOSTATE_COMPLEX = {
         'uoO' : 'u',
         'uGG' : 'u',
         'yOG' : 'y',
+        'yOo' : 'y',
+        'yOO' : 'y',
         'yGo' : 'y',
         'yGO' : 'y',
         'yGG' : 'y',
@@ -145,8 +147,10 @@ SUMOSTATE_COMPLEX = {
         'rgo' : 'r',
         'Gro' : 'G',
         'OrG' : 'r',
-        'uOG'  : 'u',
+        'uOG' : 'u',
+        'uOO' : 'u',
         }
+        
 def interpret_complex_state(state, phaseID, index, index2groups):
     # check whether all letters are the same
     if len(state) * state[0] == state:
