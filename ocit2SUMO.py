@@ -246,7 +246,7 @@ def parsePhaseIDs(ocitfile):
     return sorted([textNode(p, SHORTID) for p in phaseList.getChild(PHASE)])
 
 
-def parseSignalGroups(ocitfile, nodeIndex):
+def parseSignalGroups(ocitfile, nodeIndex, verbose):
     partialNodeSG = defaultdict(list)
     sgIndex = defaultdict(list) # signal group id -> [linkIndex1, linkIndex2, ...]
     yellowDur = defaultdict(lambda : 0) # link index -> duration
@@ -281,7 +281,8 @@ def parseSignalGroups(ocitfile, nodeIndex):
                     getSignalDuration(sg, SIGNAL_DEACTIVATE, indices, yellowDur, ID)
             partialNodeSG[nodeIndex].append(ID)
         except:
-            pass
+            if verbose:
+                print("SignalGroup '%s' has no indices" % ID)
     return sgIndex, yellowDur, redYellowDur, maxIndex, partialNodeSG
 
 def getGroupPriority(groupID):
@@ -675,7 +676,7 @@ def buildSumoPhasesFromOcit(options):
             continue
 
         # init signal groups
-        sgIndex, yellowDur, redYellowDur, maxIndex, partialNodeSG = parseSignalGroups(options.ocitfile, nodeIndex)
+        sgIndex, yellowDur, redYellowDur, maxIndex, partialNodeSG = parseSignalGroups(options.ocitfile, nodeIndex, options.verbose)
         index2groups = getIndex2Groups(sgIndex)
         if options.verbose:
             print("group -> indices")
@@ -727,7 +728,7 @@ def main(options):
 
         if options.usePrograms:
 
-            sgIndex, yellowDur, redYellowDur, maxIndex, partialNodeSG = parseSignalGroups(options.ocitfile, 1)
+            sgIndex, yellowDur, redYellowDur, maxIndex, partialNodeSG = parseSignalGroups(options.ocitfile, 1, options.verbose)
 
             signalGroups = [l for sgList in partialNodeSG.values() for l in sgList]
 
