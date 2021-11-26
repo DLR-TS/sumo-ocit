@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+# Copyright (C) 2017-2021 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the terms
+# of the LICENSE file which accompanies this distribution
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2018-2020 German Aerospace Center (DLR) and others.
-# See LICENSE file which accompanies this distributionf or the usage terms of these tools.
 
 # @file    ocit2AGLOSA.py
 # @author  Jakob Erdmann
 # @author  Daniel Wesemeyer
 # @date    2018-09-19
-# @version $Id$
 
 """
 Create configuration file for AGLOSA from ocit xml
-depends on ocit2SUMO 
+depends on ocit2SUMO
 """
 from collections import defaultdict
 
@@ -25,15 +25,16 @@ def main(options):
     with open(options.outfile, 'w') as outf:
 
         for nodeID, sgIndex, maxIndex, phaseProperties, comments in buildSumoPhasesFromOcit(options):
-            outf.write("PHASE_PROPERTIES = { # Teilknoten %s\n" % nodeID)
+            subnode = " # Teilknoten %s" % nodeID if nodeID else ""
+            outf.write("PHASE_PROPERTIES = {%s\n" % subnode)
             for i, ((dur, state, nextPhase, major, majorNext), comment) in enumerate(zip(phaseProperties, comments)):
                 if i % 40 == 0:
                     # write index annotation
                     indexComment = ''
                     indexComment2 = ''
                     for i2 in range(len(state)):
-                        indexComment += str(i2 / 10)
-                        indexComment2 += str(i2 % 10)
+                        indexComment += str(int(i2 / 10))
+                        indexComment2 += str(int(i2 % 10))
                     stateLength = len(state)
                     outf.write('         #%s\n' % indexComment)
                     outf.write('         #%s\n' % indexComment2)

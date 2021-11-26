@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+# Copyright (C) 2017-2021 German Aerospace Center (DLR) and others.
+# This program and the accompanying materials are made available under the terms
+# of the LICENSE file which accompanies this distribution
 # Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2018-2020 German Aerospace Center (DLR) and others.
-# See LICENSE file which accompanies this distributionf or the usage terms of these tools.
 
 # @file    ocit2SUMO.py
 # @author  Jakob Erdmann
@@ -10,8 +11,8 @@
 # @date    2018-09-19
 
 """
-Create 'sumo additional file' with tls programs from ocit xml
-SUMO tls indices must exist as comment (Bemerkung) in each signal group (Signalgruppe)
+Create additional file with tls programs from ocit xml
+SUMO link indices must exist as comment (Bemerkung) in each signal group (Signalgruppe)
 """
 from __future__ import absolute_import
 from __future__ import print_function
@@ -150,7 +151,6 @@ SUMOSTATE_COMPLEX = {
         'uOG' : 'u',
         'uOO' : 'u',
         }
-        
 def interpret_complex_state(state, phaseID, index, index2groups):
     # check whether all letters are the same
     if len(state) * state[0] == state:
@@ -176,7 +176,7 @@ def normalizeStates(states, phaseID, index2groups, minorIndex, majorIndex=[]):
     return states
 
 def isBlinker(groupID):
-    return "BL" in groupID or "ge" in groupID or "gn" in groupID or "H" in groupID
+    return "BL" in groupID or "ge" in groupID or "gn" in groupID or "H" in groupID or "Dn" in groupID or "Db" in groupID
 
 # regex for finding consecutive digits in a string
 RENUM = re.compile("(\d\d*)")
@@ -205,7 +205,7 @@ def get_options(args=None):
     optParser.add_option("--verbose-transition", dest="vTrans", help="Give extra information on the transition")
 
     (options, args) = optParser.parse_args(args=args)
-    
+
     options.ignorePhases = set(map(int, options.ignorePhases.split(','))) if options.ignorePhases else set()
     options.ignoreNodes = set(map(int, options.ignoreNodes.split(','))) if options.ignoreNodes else set()
     options.minorIndex = set(map(int, options.minorIndex.split(','))) if options.minorIndex else set()
@@ -215,11 +215,11 @@ def get_options(args=None):
     else:
         sys.stderr.write("argument <OCITFILE> missing")
         sys.exit()
-        
+
     return options
 
 def extraInfo(options, trans, group, index=None):
-    return ((options.vIndex or options.vTrans or options.vGroup) 
+    return ((options.vIndex or options.vTrans or options.vGroup)
             and (options.vIndex is None or index is None or options.vIndex == index)
             and (options.vTrans is None or trans is None or options.vTrans in trans)
             and (options.vGroup is None or group is None or options.vGroup == group))
@@ -260,7 +260,7 @@ def parseSignalGroups(ocitfile, nodeIndex):
         #if nodeIndex is not None:
         #    # only return sigal groups that belong to the current node
         #    # ('Teilknoten'). This is done by matching with the numerical index of
-        #    # the first phase in the current cycle 
+        #    # the first phase in the current cycle
         #    numID = int(RENUM.search(ID).groups()[0])
         #    # node 1 (phases 11 to 19) uses signal groups 0-9
         #    # node 2 (phases 21 to 29) uses signal groups 10-19
@@ -289,7 +289,7 @@ def getGroupPriority(groupID):
         return 2
     if 'R' in groupID or 'L' in groupID:
         return 0
-    else: 
+    else:
         return 1
 
 def getIndex2Groups(sgIndex):
@@ -302,9 +302,6 @@ def getIndex2Groups(sgIndex):
 def parsePhaseStates(ocitfile, cycle, sgIndex, maxIndex):
     index2groups = getIndex2Groups(sgIndex)
     defaultState = [['O'] * max(1, len(index2groups[i])) for i in range(maxIndex + 1)]
-    #print(sgIndex)
-    #print(index2groups)
-    #print(defaultState)
     phases = {} # id -> sumoState
     phaseList = list(parse(ocitfile, PHASELIST))[0]
     for phase in phaseList.getChild(PHASE):
@@ -319,7 +316,6 @@ def parsePhaseStates(ocitfile, cycle, sgIndex, maxIndex):
                 gIndex = index2groups[index].index(groupID)
                 stateList[index][gIndex] = groupState
         phases[ID] = stateList
-        #print(ID, stateList)
     return phases
 
 
@@ -339,7 +335,7 @@ def reduceComplexState(options, index2groups, sgIndex, ID, phases, fromPhase):
                     complexState2.append(singleLetter)
                 else:
                     complexState2.append(gState)
-                    
+
         if not complexState2:
             complexState2 = ['O']
         if extraInfo(options, ID, None, index):
@@ -398,7 +394,7 @@ def parseTransitions(options, sgIndex, phases):
         if extraInfo(options, ID, None):
             print(ID)
             print("\n".join(map(str,transitionStates)))
-    
+
     return transitions
 
 def recheckGreenMinor(options, phases, transitions):
@@ -419,7 +415,7 @@ def recheckGreenMinor(options, phases, transitions):
                 if corrected:
                     print("corrected inconsisted state in transition '%s' index %s times %s" % (
                         transitionID, index, corrected))
-    
+
 
 def addRedYellow(transitions, phases, yellowDur, redYellowDur, verbose):
     for (ID, fromPhase, toPhase), transition in transitions.items():
@@ -437,7 +433,7 @@ def addRedYellow(transitions, phases, yellowDur, redYellowDur, verbose):
 
             stateAfter = statesAfter[i]
             for t in range(len(transition) - 1, -2 , -1):
-                if t == -1: 
+                if t == -1:
                     oldState = statesBefore[i]
                 else:
                     oldState = transition[t][i]
@@ -468,30 +464,32 @@ def compactifyTransitions(transitions):
         timedTransitions[(transitionID, fromTo)] = timedTransition
     return timedTransitions
 
-
 def generateSumoPhases(cycle, majorIndex, defaultMinDur, sgIndex, phases,
         timedTransitions):
     phaseProperties = [] # [(dur, state, next, major, majorNext), ....]
     comments = [] # sumoindex, phaseID
-    usedTransitions = set()
     sumoIndex = {} # phaseID -> sumo phase index
     numPhases = 0
     for phaseIndex, phaseID in enumerate(cycle):
-        phaseProperties.append((defaultMinDur, phases[phaseID], -1, majorIndex[phaseID], 0))
-        comments.append('          <!-- %3s %s -->' % (numPhases, phaseID))
+        phaseProperties.append([defaultMinDur, phases[phaseID], None, majorIndex[phaseID], 0])
+        comments.append('  <!-- %3s %s -->' % (numPhases, phaseID))
         sumoIndex[phaseID] = numPhases
         numPhases += 1
-        fromTo = (phaseID, cycle[(phaseIndex + 1) % len(cycle)])
-        if fromTo in timedTransitions:
-            transitionID, timedTransition = timedTransitions[fromTo]
-            usedTransitions.add(fromTo)
-            numPhases = appendTransition(phaseProperties, comments, timedTransition, transitionID,
-                    sumoIndex, majorIndex, fromTo, numPhases)
+    entryPoints = {} # fromTo : sumoIndex
     for (transitionID, fromTo), timedTransition in timedTransitions.items():
-        if fromTo in usedTransitions:
-            continue
+        entryPoints[fromTo] = numPhases
         numPhases = appendTransition(phaseProperties, comments, timedTransition, transitionID,
                 sumoIndex, majorIndex, fromTo, numPhases)
+
+    # fix list of next phases for major phases after sumo indices for all transitions are known
+    for pp in phaseProperties:
+        nextPhases, major = pp[2], pp[3]
+        if nextPhases is None:
+            nextList = []
+            for (transitionID, fromTo), timedTransition in timedTransitions.items():
+                if major == majorIndex[fromTo[0]]:
+                    nextList.append(entryPoints[fromTo])
+            pp[2] = ' '.join(map(str, nextList))
 
     return phaseProperties, comments
 
@@ -504,7 +502,7 @@ def appendTransition(phaseProperties, comments, timedTransition, transitionID,
             nextPhase = sumoIndex[toPhase] if i == len(timedTransition) - 1 else -1
         except:
             nextPhase = -1
-        nextPadding = '          ' if nextPhase == -1 else ' '
+        nextPadding = '            ' if nextPhase == -1 else '   '
         phaseProperties.append((dur, ''.join(state), nextPhase, majorIndex[fromPhase], majorIndex[toPhase]))
         comments.append('%s<!-- %3s %s -->' % (nextPadding, numPhases, transitionID))
         numPhases += 1
@@ -525,7 +523,7 @@ def writeTLS(outf, tlsID, phaseDuration, sgIndex, maxIndex, phaseProperties, com
     outf.write("   -->\n")
     outf.write('   <tlLogic id="%s" programID="ocit_import">\n' % tlsID)
     for (dur, state, nextPhase, major, majorNext), comment in zip(phaseProperties, comments):
-        if nextPhase >= 0:
+        if nextPhase != -1:
             nextPhaseStr = ' next="%s"' % nextPhase
         else:
             nextPhaseStr = ''
@@ -553,16 +551,23 @@ def buildCycles(phases, ignorePhases):
 
 def parseSignalPrograms(options, sgIndex, redYellowDur, yellowDur):
     programs = {}
-    maxSgIndex = max([val for l in sgIndex.values() for val in l])
+
+    index2groups = getIndex2Groups(sgIndex)
+    maxSgIndex = -1
+    for k in sgIndex.keys():
+        for i in sgIndex[k]:
+            if i > maxSgIndex:
+                maxSgIndex = i
     programsList = list(parse(options.ocitfile, PROGRAMLIST))[0]
+
     for program in programsList.getChild(PROGRAM):
         programID = textNode(program, SHORTID)
-
-        import pdb
 
         cycleTime = int(textNode(program.getChild(PROGRAM_HEAD)[0], CYCLE_TIME))
         # generate an allread program as starting point
         sigProgram = [[[] for _ in range(maxSgIndex+1)] for _ in range(cycleTime)]
+        pendingSgIDs = list(sgIndex.keys())
+        programElements = {}
         if program.hasChild(PROGRAM_ROW):
             for element in program.getChild(PROGRAM_ROW):
                 sgID = textNode(element, SIGNALGROUP)
@@ -570,43 +575,45 @@ def parseSignalPrograms(options, sgIndex, redYellowDur, yellowDur):
                     continue
                 switches = []
                 permState = None
+                stdOpen = 'G'
                 stdClosed = 'r'
                 if element.hasChild(SWITCHING_TIME):
                     for switch in element.getChild(SWITCHING_TIME):
                         state = SIGNALSTATE_SUMOSTATE[textNode(switch, PHASE_SIGNAL)]
                         t = int(textNode(switch, SWITCHING_TIME2))
                         switches.append((t, state))
-                        if state != 'G':
+                        if not state in ('G', 'O'):
                             stdClosed = state
+                        elif state != 'r':
+                            stdOpen = state
+
                 elif element.hasChild(PERM_STATE):
                     permState = SIGNALSTATE_SUMOSTATE[textNode(element, PERM_STATE)]
                 else:
                     raise Exception('Neither switches nor permanent signal state were given. Cannot interpret signal state for sgIndex %s (programID %s)' % (sgID, programID))
 
-                sgIndices = sgIndex[sgID]
-                start_index = 0
-                assign = ''
-                if len(switches) < 1:
-                    for sgIdx in sgIndices:
+                programElements[sgID] = (switches, stdOpen, stdClosed, permState)
+
+            for sgIdx, sgGroups in index2groups.items():
+                for sgID in sgGroups:
+                    switches, stdOpen, stdClosed, permState = programElements[sgID]
+                    start_index = 0
+                    assign = ''
+                    if len(switches) < 1:
                         for i in range(0, cycleTime):
                             sigProgram[i][sgIdx].append(permState)
-                else:
-                    for k, (t, state) in enumerate(switches):
-                        onset = False
+                    else:
+                        for k, (t, to_state) in enumerate(switches):
+                            onset = False
 
-                        if state == 'G':
-                            assign = stdClosed
-                            onset = True
-                        else:
-                            assign = 'G'
+                            if to_state == stdOpen:
+                                assign = stdClosed
+                                onset = True
+                            else:
+                                assign = stdOpen
 
-
-                        for sgIdx in sgIndices:
                             for i in range(start_index, t):
                                 sigProgram[i][sgIdx].append(assign)
-                        
-                            #if programID == '5' and sgID == 'H10':
-                            #    pdb.set_trace()
 
                             if onset:
                                 dur = min(redYellowDur[sgIdx], redYellowDur[sgID])
@@ -623,11 +630,16 @@ def parseSignalPrograms(options, sgIndex, redYellowDur, yellowDur):
                                         i %= cycleTime
                                     sigProgram[i][sgIdx] = ['y']
 
-                        start_index = t + dur if not onset else t
-                        if k >= len(switches)-1:
-                            for sgIdx in sgIndices:
+                            start_index = t + dur if not onset else t
+                            if k >= len(switches)-1:
                                 for i in range(start_index, cycleTime):
-                                    sigProgram[i][sgIdx].append(state)
+                                    sigProgram[i][sgIdx].append(to_state)
+#           for i in range(cycleTime):
+#               print('before: ', sigProgram[i])
+#               for k in range(maxSgIndex):
+#                   if len(sigProgram[i][k]) < 1:
+#                       sigProgram[i][k].append('r')
+#               print('after: ', sigProgram[i])
             if not options.noGrouping:
                 grouped = [(k, list(g)) for k, g in groupby(sigProgram)]
                 timedProgram = [(len(g), k) for k, g in grouped]
@@ -636,10 +648,6 @@ def parseSignalPrograms(options, sgIndex, redYellowDur, yellowDur):
 
             for i, (t, state) in enumerate(timedProgram):
                 state = [val if len(val) > 0 else ['o'] for val in state]
-                #for k, s in enumerate(state):
-                    #state[k] = interpret_complex_state_simple(''.join(s))
-                    #print(k, state)
-                index2groups = getIndex2Groups(sgIndex)
                 majorIndex = options.majorIndex if options.majorIndex is not None else []
                 state = normalizeStates(state, None, index2groups, options.minorIndex, majorIndex)
                 timedProgram[i] = (t, state)
