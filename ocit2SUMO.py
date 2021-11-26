@@ -281,8 +281,9 @@ def parseSignalGroups(ocitfile, nodeIndex, verbose):
                     getSignalDuration(sg, SIGNAL_DEACTIVATE, indices, yellowDur, ID)
             partialNodeSG[nodeIndex].append(ID)
         except:
-            if verbose:
-                print("SignalGroup '%s' has no indices" % ID)
+            pass
+        if verbose and not sgIndex.get(ID):
+            print("SignalGroup '%s' has no indices" % ID)
     return sgIndex, yellowDur, redYellowDur, maxIndex, partialNodeSG
 
 def getGroupPriority(groupID):
