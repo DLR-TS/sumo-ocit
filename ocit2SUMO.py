@@ -523,7 +523,8 @@ def writeTLS(outf, tlsID, phaseDuration, sgIndex, maxIndex, phaseProperties, com
         outf.write("   %2s: %s\n" % (i, ' '.join(sgs) ))
 
     outf.write("   -->\n")
-    outf.write('   <tlLogic id="%s" programID="ocit_import">\n' % tlsID)
+    outf.write('    <tlLogic id="%s" programID="ocit_import">\n' % tlsID)
+    writeIndexComment(outf, phaseDurLen, maxIndex + 1)
     for (dur, state, nextPhase, major, majorNext), comment in zip(phaseProperties, comments):
         if nextPhase != -1:
             nextPhaseStr = ' next="%s"' % nextPhase
@@ -532,7 +533,7 @@ def writeTLS(outf, tlsID, phaseDuration, sgIndex, maxIndex, phaseProperties, com
         if majorNext == 0:
             dur = phaseDuration
         durationPadding = (phaseDurLen - len(str(dur))) * ' '
-        outf.write('       <phase duration="%s"%s state="%s"%s/>%s\n' % (
+        outf.write('        <phase duration="%s"%s state="%s"%s/>%s\n' % (
             dur, durationPadding, state, nextPhaseStr, comment))
     outf.write('   </tlLogic>\n')
 
@@ -723,6 +724,17 @@ def buildSumoPhasesFromOcit(options):
         yield nodeID, sgIndex, maxIndex, phaseProperties, comments
 
 
+def writeIndexComment(outf, phasedurLen, stateLen):
+    indexComment = ''
+    indexComment2 = ''
+    for i2 in range(stateLen):
+        indexComment += str(int(i2 / 10))
+        indexComment2 += str(int(i2 % 10))
+    padding = ' ' * (29 + phasedurLen)
+    outf.write('%s<!-- %s -->\n' % (padding, indexComment))
+    outf.write('%s<!-- %s -->\n' % (padding, indexComment2))
+
+
 def main(options):
     with open(options.outfile, 'w') as outf:
         outf.write('<additional>\n')
@@ -739,11 +751,14 @@ def main(options):
 
             programs = parseSignalPrograms(options, sgIndex2, redYellowDur, yellowDur)
             phaseDurLen = 1
+            phaseLen = 1
             for pID, program in programs.items():
                 for (dur, phase) in program:
                     phaseDurLen = max(phaseDurLen, len(str(dur)))
+                    phaseLen = len(phase)
             for pID, program in programs.items():
                 outf.write('    <tlLogic id="%s" type="static" programID="%s">\n' % (options.tlsID, pID))
+                writeIndexComment(outf, phaseDurLen, phaseLen)
                 for (dur, phase) in program:
                     durationPadding = (phaseDurLen - len(str(dur))) * ' '
                     outf.write('        <phase duration="%s"%s state="%s"/>\n' % (
