@@ -578,22 +578,41 @@ def parseSignalPrograms(options, sgIndex, redYellowDur, yellowDur):
                     continue
                 switches = []
                 permState = None
-                stdOpen = 'G'
-                stdClosed = 'r'
+                foundStates = set()
                 if element.hasChild(SWITCHING_TIME):
                     for switch in element.getChild(SWITCHING_TIME):
                         state = SIGNALSTATE_SUMOSTATE[textNode(switch, PHASE_SIGNAL)]
                         t = int(textNode(switch, SWITCHING_TIME2))
                         switches.append((t, state))
-                        if not state in ('G', 'O'):
-                            stdClosed = state
-                        elif state != 'r':
-                            stdOpen = state
-
+                        foundStates.add(state)
                 elif element.hasChild(PERM_STATE):
                     permState = SIGNALSTATE_SUMOSTATE[textNode(element, PERM_STATE)]
                 else:
                     raise Exception('Neither switches nor permanent signal state were given. Cannot interpret signal state for sgIndex %s (programID %s)' % (sgID, programID))
+
+                stdOpen = None
+                stdClosed = None
+                if not foundStates:
+                    stdOpen = 'G'
+                    stdClosed = 'r'
+
+                if 'G' in foundStates:
+                    stdOpen = 'G'
+                elif 'O' in foundStates:
+                    stdOpen = 'O'
+                elif 'o' in foundStates:
+                    stdOpen = 'o'
+
+                if 'r' in foundStates:
+                    stdClosed = 'r'
+                elif 'O' in foundStates:
+                    stdClosed = 'O'
+                elif 'o' in foundStates:
+                    stdClosed = 'o'
+
+                if stdOpen is None or stdClosed is None:
+                    raise Exception('Could not interpret open/closed states for sgIndex %s (programID %s), found states %s' %
+                            (sgID, programID, ','.join(foundStates)))
 
                 programElements[sgID] = (switches, stdOpen, stdClosed, permState)
 
