@@ -738,10 +738,16 @@ def main(options):
             sgIndex2 = dict([(sg, indices) for (sg, indices) in sgIndex.items() if sg in signalGroups])
 
             programs = parseSignalPrograms(options, sgIndex2, redYellowDur, yellowDur)
+            phaseDurLen = 1
+            for pID, program in programs.items():
+                for (dur, phase) in program:
+                    phaseDurLen = max(phaseDurLen, len(str(dur)))
             for pID, program in programs.items():
                 outf.write('    <tlLogic id="%s" type="static" programID="%s">\n' % (options.tlsID, pID))
                 for (dur, phase) in program:
-                    outf.write('        <phase duration="%s" state="%s"/>\n' % (dur, ''.join(''.join(p) for p in phase)))
+                    durationPadding = (phaseDurLen - len(str(dur))) * ' '
+                    outf.write('        <phase duration="%s"%s state="%s"/>\n' % (
+                        dur, durationPadding, ''.join(''.join(p) for p in phase)))
                 outf.write('    </tlLogic>\n')
 
         else:
