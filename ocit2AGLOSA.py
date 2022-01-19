@@ -27,7 +27,7 @@ def main(options):
         for nodeID, sgIndex, maxIndex, phaseProperties, comments in buildSumoPhasesFromOcit(options):
             subnode = " # Teilknoten %s" % nodeID if nodeID else ""
             outf.write("PHASE_PROPERTIES = {%s\n" % subnode)
-            for i, ((dur, state, nextPhase, major, majorNext), comment) in enumerate(zip(phaseProperties, comments)):
+            for i, ((dur, state, nextPhase, major, majorNext, name), comment) in enumerate(zip(phaseProperties, comments)):
                 if i % 40 == 0:
                     # write index annotation
                     indexComment = ''
@@ -44,8 +44,8 @@ def main(options):
 
                 if nextPhase == -1:
                     comment = comment[9:]
-                outf.write('  %3i : ("%s", %2i, %2i, %2i), # %s\n' % (
-                    i, state, dur, major, majorNext, comment))
+                outf.write('  %3i : ("%s", %2i, %2i, %2i), # %s %s -->\n' % (
+                    i, state, dur, major, majorNext, comment[:-4], name))
             outf.write("}\n\n\n")
 
 

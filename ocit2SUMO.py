@@ -468,13 +468,13 @@ def compactifyTransitions(transitions):
 
 def generateSumoPhases(cycle, majorIndex, defaultMinDur, sgIndex, phases,
         timedTransitions):
-    phaseProperties = [] # [(dur, state, next, major, majorNext), ....]
+    phaseProperties = [] # [(dur, state, next, major, majorNext, name), ....]
     comments = [] # sumoindex, phaseID
     sumoIndex = {} # phaseID -> sumo phase index
     numPhases = 0
     for phaseIndex, phaseID in enumerate(cycle):
-        phaseProperties.append([defaultMinDur, phases[phaseID], None, majorIndex[phaseID], 0])
-        comments.append('  <!-- %3s %s -->' % (numPhases, phaseID))
+        phaseProperties.append([defaultMinDur, phases[phaseID], None, majorIndex[phaseID], 0, phaseID])
+        comments.append('  <!-- %3s -->' % numPhases)
         sumoIndex[phaseID] = numPhases
         numPhases += 1
     entryPoints = {} # fromTo : sumoIndex
@@ -505,8 +505,8 @@ def appendTransition(phaseProperties, comments, timedTransition, transitionID,
         except:
             nextPhase = -1
         nextPadding = '            ' if nextPhase == -1 else '   '
-        phaseProperties.append((dur, ''.join(state), nextPhase, majorIndex[fromPhase], majorIndex[toPhase]))
-        comments.append('%s<!-- %3s %s -->' % (nextPadding, numPhases, transitionID))
+        phaseProperties.append((dur, ''.join(state), nextPhase, majorIndex[fromPhase], majorIndex[toPhase], transitionID))
+        comments.append('%s<!-- %3s -->' % (nextPadding, numPhases))
         numPhases += 1
     return numPhases
 
@@ -523,18 +523,24 @@ def writeTLS(outf, tlsID, phaseDuration, sgIndex, maxIndex, phaseProperties, com
         outf.write("   %2s: %s\n" % (i, ' '.join(sgs) ))
 
     outf.write("   -->\n")
-    outf.write('    <tlLogic id="%s" programID="ocit_import">\n' % tlsID)
+    outf.write('    <tlLogic id="%s" type="actuated" programID="ocit_import">\n' % tlsID)
     writeIndexComment(outf, phaseDurLen, maxIndex + 1)
-    for (dur, state, nextPhase, major, majorNext), comment in zip(phaseProperties, comments):
+    maxNameLen = max([len(pp[-1]) for pp in phaseProperties])
+    for (dur, state, nextPhase, major, majorNext, name), comment in zip(phaseProperties, comments):
+        if name != "":
+            nameStr = ' name="%s"' % name
+        else:
+            nameStr = ''
         if nextPhase != -1:
             nextPhaseStr = ' next="%s"' % nextPhase
         else:
             nextPhaseStr = ''
+        nextPhaseStr = ' ' * (maxNameLen - len(name)) + nextPhaseStr
         if majorNext == 0:
             dur = phaseDuration
         durationPadding = (phaseDurLen - len(str(dur))) * ' '
-        outf.write('        <phase duration="%s"%s state="%s"%s/>%s\n' % (
-            dur, durationPadding, state, nextPhaseStr, comment))
+        outf.write('        <phase duration="%s"%s state="%s"%s%s/>%s\n' % (
+            dur, durationPadding, state, nameStr, nextPhaseStr, comment))
     outf.write('   </tlLogic>\n')
 
 def buildCycles(phases, ignorePhases):
